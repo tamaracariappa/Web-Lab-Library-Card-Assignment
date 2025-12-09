@@ -1,0 +1,433 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Library Card Registration</title>
+  <style>
+    :root{--accent:#2563eb;--muted:#6b7280;--card:#ffffff;--bg:#f3f4f6}
+    *{box-sizing:border-box}
+    body{font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);margin:0;color:#111}
+    .container{max-width:1000px;margin:28px auto;padding:20px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    h1{font-size:20px;margin:0}
+    .grid{display:grid;grid-template-columns:1fr 380px;gap:20px}
+    .card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 6px 18px rgba(17,24,39,0.06)}
+
+    /* Form */
+    form .row{display:flex;gap:10px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=text],input[type=email],input[type=password],input[type=date],select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #e6e9ee;background:#fcfdff}
+    .small{font-size:12px;color:var(--muted)}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:0;cursor:pointer}
+    .btn-primary{background:var(--accent);color:#fff}
+    .btn-ghost{background:transparent;border:1px solid #e6e9ee}
+    .muted{color:var(--muted)}
+
+    /* Upload preview */
+    .upload-preview{height:120px;border-radius:8px;border:1px dashed #e6e9ee;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .upload-preview img{max-width:100%;max-height:100%}
+
+    /* Admin */
+    .admin-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .badge{display:inline-block;padding:6px 8px;border-radius:999px;background:#eef2ff;color:#1e3a8a;font-size:12px}
+
+    /* Member Card */
+    .member-card{padding:12px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfdff);text-align:left}
+    .card-top{display:flex;align-items:center;justify-content:space-between}
+    .barcode{height:40px}
+
+    /* table */
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:8px;border-bottom:1px solid #f1f5f9;text-align:left}
+    th{font-size:13px;color:var(--muted)}
+
+    footer{margin-top:16px;color:var(--muted);font-size:13px}
+
+    @media (max-width:880px){.grid{grid-template-columns:1fr}.container{padding:12px}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Library Card Registration</h1>
+      <div>
+        <button class="btn btn-ghost" id="btnAdmin">Admin Login</button>
+        <button class="btn btn-ghost" id="btnViewMembers">View Members</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT: Form -->
+      <section class="card" aria-labelledby="formHeading">
+        <h2 id="formHeading">Register for a Library Card</h2>
+        <p class="small">Fill the form below. This demo simulates OTP and stores applications locally.</p>
+
+        <form id="regForm" autocomplete="off">
+          <div style="margin-top:12px">
+            <label>Full name</label>
+            <input id="fullName" type="text" placeholder="e.g. Sohan B" required />
+          </div>
+
+          <div style="margin-top:12px">
+            <label>Email</label>
+            <input id="email" type="email" placeholder="you@example.com" required />
+          </div>
+
+          <div style="margin-top:12px">
+            <label>Phone</label>
+            <input id="phone" type="text" placeholder="10-digit phone" maxlength="10" required />
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:12px">
+            <div style="flex:1">
+              <label>Date of birth</label>
+              <input id="dob" type="date" required />
+            </div>
+            <div style="width:160px">
+              <label>Member type</label>
+              <select id="memberType">
+                <option>Student</option>
+                <option>Faculty</option>
+                <option>Public</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <label>Address</label>
+            <textarea id="address" rows="2" placeholder="Street, City, State, PIN" required></textarea>
+          </div>
+
+          <div style="margin-top:12px">
+            <label>ID Proof (image/pdf)</label>
+            <input id="idFile" type="file" accept="image/*,.pdf" />
+            <div style="margin-top:8px" class="upload-preview" id="uploadPreview">No file chosen</div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+            <button type="button" id="sendOtp" class="btn btn-ghost">Send OTP</button>
+            <div style="flex:1">
+              <input id="otpInput" type="text" placeholder="Enter OTP" />
+            </div>
+            <button type="button" id="verifyOtp" class="btn btn-primary">Verify OTP</button>
+          </div>
+          <div id="otpHint" class="small muted" style="margin-top:8px">OTP not sent</div>
+
+          <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+            <button type="submit" class="btn btn-primary">Submit Application</button>
+            <button type="reset" class="btn btn-ghost">Reset</button>
+          </div>
+        </form>
+
+        <footer>
+          This is a frontend demo. For production use a backend to securely store files, send OTPs, and manage members.
+        </footer>
+      </section>
+
+      <!-- RIGHT: Preview / Admin -->
+      <aside>
+        <div class="card member-card" id="previewCard">
+          <div class="card-top">
+            <div>
+              <div class="muted">Preview Digital Card</div>
+              <strong id="previewName">—</strong>
+              <div class="small muted" id="previewType">Member type</div>
+            </div>
+            <div style="text-align:right">
+              <div id="previewId" class="badge">ID: —</div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:12px;align-items:center">
+            <div style="flex:1">
+              <div class="small muted">Address</div>
+              <div id="previewAddress">—</div>
+            </div>
+            <div>
+              <svg id="barcodeSvg" class="barcode" width="120" height="40" aria-hidden="true"></svg>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="small muted">ID proof</div>
+            <div class="upload-preview" id="previewFile">No file</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><strong>Admin Panel</strong><div class="small muted">(demo)</div></div>
+            <div>
+              <span class="small muted">Admin can approve/reject</span>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <button class="btn btn-ghost" id="btnShowApplications">Show Applications</button>
+            <div id="applicationsList" style="margin-top:12px;display:none">
+              <table id="appsTable">
+                <thead><tr><th>Name</th><th>Phone</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Admin modal (simple) -->
+  <div id="adminModal" style="position:fixed;left:0;top:0;right:0;bottom:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.5)">
+    <div style="background:#fff;padding:18px;border-radius:12px;max-width:420px;width:100%">
+      <h3 style="margin:0">Admin Login</h3>
+      <p class="small muted">Enter admin password to unlock (demo password: <code>admin123</code>)</p>
+      <input id="adminPass" type="password" placeholder="Password" style="width:100%;padding:10px;border-radius:8px;border:1px solid #e6e9ee;margin-top:8px" />
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button class="btn btn-ghost" id="closeAdmin">Cancel</button>
+        <button class="btn btn-primary" id="doAdminLogin">Login</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Simple frontend-only demo logic
+    const $ = id => document.getElementById(id);
+
+    const form = $('regForm');
+    const fullName = $('fullName');
+    const email = $('email');
+    const phone = $('phone');
+    const dob = $('dob');
+    const memberType = $('memberType');
+    const address = $('address');
+    const idFile = $('idFile');
+
+    const uploadPreview = $('uploadPreview');
+    const previewFile = $('previewFile');
+    const previewName = $('previewName');
+    const previewType = $('previewType');
+    const previewAddress = $('previewAddress');
+    const previewId = $('previewId');
+    const barcodeSvg = $('barcodeSvg');
+
+    const sendOtpBtn = $('sendOtp');
+    const verifyOtpBtn = $('verifyOtp');
+    const otpInput = $('otpInput');
+    const otpHint = $('otpHint');
+
+    const btnAdmin = $('btnAdmin');
+    const adminModal = $('adminModal');
+    const closeAdmin = $('closeAdmin');
+    const doAdminLogin = $('doAdminLogin');
+    const adminPass = $('adminPass');
+
+    const btnShowApplications = $('btnShowApplications');
+    const applicationsList = $('applicationsList');
+    const appsTableBody = document.querySelector('#appsTable tbody');
+
+    const btnViewMembers = $('btnViewMembers');
+
+    // localStorage key
+    const STORAGE_KEY = 'library_applications_v1';
+
+    // OTP simulation
+    let currentOtp = null;
+    let otpVerified = false;
+
+    function saveApplication(app){
+      const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      items.push(app);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    }
+
+    function loadApplications(){
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    }
+
+    function renderPreview(){
+      previewName.textContent = fullName.value || '—';
+      previewType.textContent = memberType.value || '—';
+      previewAddress.textContent = address.value || '—';
+      previewId.textContent = 'ID: ' + (localStorage.getItem('lastMemberId') || '—');
+      // barcode-like stripes
+      drawBarcode(localStorage.getItem('lastMemberId') || '---');
+    }
+
+    function drawBarcode(code){
+      // simple visual barcode using rectangles
+      const svgNS = 'http://www.w3.org/2000/svg';
+      while(barcodeSvg.firstChild) barcodeSvg.removeChild(barcodeSvg.firstChild);
+      const rects = 20;
+      for(let i=0;i<rects;i++){
+        const r = document.createElementNS(svgNS,'rect');
+        const w = 4; const h = 40; const x = i*w; const fill = ((''+code).charCodeAt(i%code.length) + i) % 2 ? '#111' : '#eee';
+        r.setAttribute('x',x);
+        r.setAttribute('y',0);
+        r.setAttribute('width',w);
+        r.setAttribute('height',h);
+        r.setAttribute('fill',fill);
+        barcodeSvg.appendChild(r);
+      }
+    }
+
+    // file preview
+    idFile.addEventListener('change', (e)=>{
+      const f = e.target.files[0];
+      if(!f){uploadPreview.textContent='No file chosen';previewFile.textContent='No file';return}
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        if(f.type === 'application/pdf'){
+          uploadPreview.innerHTML = '<div style="padding:8px">PDF uploaded</div>';
+          previewFile.innerHTML = '<div style="padding:8px">PDF uploaded</div>';
+        } else {
+          uploadPreview.innerHTML = '<img src="'+ev.target.result+'" alt="preview" />';
+          previewFile.innerHTML = '<img src="'+ev.target.result+'" alt="preview" />';
+        }
+      }
+      reader.readAsDataURL(f);
+    });
+
+    // OTP send
+    sendOtpBtn.addEventListener('click', ()=>{
+      const p = phone.value.trim();
+      if(!/^\d{10}$/.test(p)){
+        otpHint.textContent = 'Enter a valid 10-digit phone before sending OTP';
+        return;
+      }
+      currentOtp = (Math.floor(100000 + Math.random()*900000)).toString();
+      otpHint.textContent = 'OTP sent (demo): ' + currentOtp + '. Enter the OTP to verify.';
+      otpVerified = false;
+      console.log('DEBUG OTP:', currentOtp);
+    });
+
+    verifyOtpBtn.addEventListener('click', ()=>{
+      if(!currentOtp){otpHint.textContent='No OTP sent';return}
+      if(otpInput.value.trim() === currentOtp){
+        otpVerified = true;
+        otpHint.textContent = 'Phone verified ✓';
+      } else {
+        otpHint.textContent = 'Incorrect OTP';
+      }
+    });
+
+    // form submit
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      // basic validation
+      if(!fullName.value.trim()){alert('Please enter full name');return}
+      if(!/^\S+@\S+\.\S+$/.test(email.value.trim())){alert('Enter valid email');return}
+      if(!/^\d{10}$/.test(phone.value.trim())){alert('Enter valid 10-digit phone');return}
+      if(!dob.value){alert('Enter dob');return}
+      if(!address.value.trim()){alert('Enter address');return}
+      if(!otpVerified){alert('Please verify phone with OTP first');return}
+
+      // generate member id
+      const ts = Date.now();
+      const memberId = 'LB' + String(ts).slice(-8);
+      localStorage.setItem('lastMemberId', memberId);
+
+      // store file as dataURL if provided
+      const f = idFile.files[0];
+      if(f){
+        const reader = new FileReader();
+        reader.onload = function(ev){
+          const app = {
+            id: memberId,
+            name: fullName.value.trim(),
+            email: email.value.trim(),
+            phone: phone.value.trim(),
+            dob: dob.value,
+            memberType: memberType.value,
+            address: address.value.trim(),
+            idFileData: ev.target.result,
+            status: 'Pending',
+            appliedAt: new Date().toISOString()
+          };
+          saveApplication(app);
+          renderPreview();
+          alert('Application submitted! Member ID: ' + memberId + '\nAdmin will approve the application in the admin panel.');
+          form.reset(); otpVerified=false; currentOtp=null; otpHint.textContent='OTP not sent'; uploadPreview.textContent='No file chosen'; previewFile.textContent='No file';
+        }
+        reader.readAsDataURL(f);
+      } else {
+        const app = {
+          id: memberId,
+          name: fullName.value.trim(),
+          email: email.value.trim(),
+          phone: phone.value.trim(),
+          dob: dob.value,
+          memberType: memberType.value,
+          address: address.value.trim(),
+          idFileData: null,
+          status: 'Pending',
+          appliedAt: new Date().toISOString()
+        };
+        saveApplication(app);
+        renderPreview();
+        alert('Application submitted! Member ID: ' + memberId + '\nAdmin will approve the application in the admin panel.');
+        form.reset(); otpVerified=false; currentOtp=null; otpHint.textContent='OTP not sent'; uploadPreview.textContent='No file chosen'; previewFile.textContent='No file';
+      }
+
+    });
+
+    // Admin modal
+    btnAdmin.addEventListener('click', ()=>{adminModal.style.display='flex';});
+    closeAdmin.addEventListener('click', ()=>{adminModal.style.display='none';adminPass.value='';});
+    doAdminLogin.addEventListener('click', ()=>{
+      if(adminPass.value === 'admin123'){
+        adminModal.style.display='none';adminPass.value='';
+        openAdminPanel();
+      } else {alert('Incorrect password (demo)')}
+    });
+
+    function openAdminPanel(){
+      applicationsList.style.display='block';
+      renderApplications();
+    }
+
+    btnShowApplications.addEventListener('click', ()=>{
+      if(applicationsList.style.display === 'block'){
+        applicationsList.style.display='none';
+      } else {
+        applicationsList.style.display='block';
+        renderApplications();
+      }
+    });
+
+    function renderApplications(){
+      const apps = loadApplications();
+      appsTableBody.innerHTML = '';
+      apps.forEach((a,idx)=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${a.name}</td><td>${a.phone}</td><td>${a.status}</td><td></td>`;
+        const actionTd = tr.querySelector('td:last-child');
+        const approveBtn = document.createElement('button'); approveBtn.className='btn btn-primary'; approveBtn.textContent='Approve';
+        const rejectBtn = document.createElement('button'); rejectBtn.className='btn btn-ghost'; rejectBtn.style.marginLeft='6px'; rejectBtn.textContent='Reject';
+        approveBtn.addEventListener('click', ()=>{updateStatus(idx,'Approved')});
+        rejectBtn.addEventListener('click', ()=>{updateStatus(idx,'Rejected')});
+        actionTd.appendChild(approveBtn); actionTd.appendChild(rejectBtn);
+        appsTableBody.appendChild(tr);
+      });
+    }
+
+    function updateStatus(index,status){
+      const apps = loadApplications();
+      if(!apps[index]) return; apps[index].status = status; localStorage.setItem(STORAGE_KEY, JSON.stringify(apps)); renderApplications();
+      alert('Application ' + apps[index].id + ' marked ' + status);
+    }
+
+    // view members
+    btnViewMembers.addEventListener('click', ()=>{
+      const apps = loadApplications().filter(a=>a.status === 'Approved');
+      if(apps.length===0){alert('No approved members yet');return}
+      const list = apps.map(a=>`ID:${a.id} — ${a.name} — ${a.memberType}`).join('\n');
+      alert('Approved members:\n' + list);
+    });
+
+    // initial render
+    renderPreview();
+  </script>
+</body>
+</html>
